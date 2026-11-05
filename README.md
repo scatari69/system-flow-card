@@ -14,7 +14,7 @@ In Home Assistant, edit the dashboard, open the card menu, and choose **Edit**. 
 
 The bundled editor uses Home Assistant's native `ha-form` controls and entity/icon pickers through its [custom card editor API](https://contributors.home-assistant.io/frontend/custom-ui/card-editor/). No additional resource is needed: replace `dist/system-flow-card.js` and refresh the browser cache.
 
-The demo's **Customize card** button opens the same editor with lightweight stand-ins for Home Assistant controls. Changes immediately update the preview and reset on reload; the demo does not save your actual dashboard.
+The demo normally shows only the sensor card, without surrounding headings, buttons or controls. Open `demo/?editor` to enter its separate editing mode with the same editor and lightweight stand-ins for Home Assistant controls. Changes immediately update the preview and reset on reload; the demo does not save your actual dashboard. In Home Assistant, settings are available through the dashboard's card editing mode.
 
 ### Publishing updates
 
@@ -22,7 +22,7 @@ Update the version in `package.json` and `package-lock.json`, run the checks, re
 
 ### Preview and verify
 
-From the project directory, run `python3 -m http.server 8765 --bind 127.0.0.1` and open **http://127.0.0.1:8765/demo/**. The demo runs the real compiled card with simulated Home Assistant entities. Its buttons switch between production, discharge and idle scenarios and between light and dark themes. Add `?test` to run browser assertions; success sets `data-test-result="passed"` on the page body. `?light` opens the light theme directly.
+From the project directory, run `python3 -m http.server 8765 --bind 127.0.0.1` and open **http://127.0.0.1:8765/demo/**. The demo runs the real compiled card with simulated Home Assistant entities. Use `?scene=night` or `?scene=idle` for other simulated scenarios, `?light` for the light theme, and `?editor` for editing mode. Add `?test` to run browser assertions; success sets `data-test-result="passed"` on the page body. `?light` opens the light theme directly.
 
 Build with `npm ci --legacy-peer-deps` followed by `npm run build`. Type-check with `node node_modules/typescript/bin/tsc --noEmit` and lint with `npm run lint`.
 

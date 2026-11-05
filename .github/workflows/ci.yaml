@@ -25,5 +25,7 @@ jobs:
           server_pid=$!
           trap 'kill "$server_pid"' EXIT
           curl --fail --silent --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8766/demo/ >/dev/null
-          google-chrome --headless --no-sandbox --disable-gpu --no-first-run --user-data-dir=/tmp/system-flow-ci --virtual-time-budget=5000 --dump-dom 'http://127.0.0.1:8766/demo/?test' > /tmp/system-flow-result.html
-          grep -q 'data-test-result="passed"' /tmp/system-flow-result.html || { cat /tmp/system-flow-result.html; exit 1; }
+          for query in test 'editor&test'; do
+            google-chrome --headless --no-sandbox --disable-gpu --no-first-run --user-data-dir=/tmp/system-flow-ci --virtual-time-budget=5000 --dump-dom "http://127.0.0.1:8766/demo/?$query" > /tmp/system-flow-result.html
+            grep -q 'data-test-result="passed"' /tmp/system-flow-result.html || { cat /tmp/system-flow-result.html; exit 1; }
+          done
