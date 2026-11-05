@@ -1,43 +1,31 @@
 name: Release
-
-on: workflow_dispatch
-
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example v1.0.1; update package.json version first)
+        required: true
+        type: string
+permissions:
+  contents: write
 jobs:
-  release-bundle:
+  release:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
-
-    outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
-      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
-
     steps:
-
-      - name: Cache pnpm modules
-        id: cache-modules
-        uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'rollup.config.js') }}
-          restore-keys: |
-            ${{ runner.os }}-
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.1
-        with:
-          version: latest
-          run_install: false
-
-      - name: Install Packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: pnpm install
-
-      - name: Build
-        run: pnpm build
-
-      - name: Release
-        run: pnpx semantic-release
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - name: Publish HACS bundle
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          test "$RELEASE_TAG" = "v$(node -p 'require("./package.json").version')"
+          gh release create "$RELEASE_TAG" dist/system-flow-card.js --target "$GITHUB_SHA" --title "$RELEASE_TAG" --generate-notes

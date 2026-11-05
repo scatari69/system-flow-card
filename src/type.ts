@@ -1,4 +1,7 @@
 export type SystemElementDef = {
+  invert?: boolean;
+  override?: boolean;
+  value?: string;
   unit?: string;
   icon?: string;
   color?: string;
@@ -9,7 +12,7 @@ export type SystemElementDef = {
   };
 }
 
-export type ElementDef = SystemElementDef & {
+export type ElementDef = Omit<SystemElementDef, "value"> & {
   value: string | {
     toSystem?: string;
     fromSystem?: string;

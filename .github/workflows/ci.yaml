@@ -1,31 +1,29 @@
 name: CI
 on:
+  push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Cache pnpm modules
-        id: cache-modules
-        uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'rollup.config.js') }}
-          restore-keys: |
-            ${{ runner.os }}-
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.1
-        with:
-          version: latest
-          run_install: false
-
-      - name: Install Packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: pnpm install
-
-      - name: Build
-        run: pnpm build
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - name: Browser regression checks
+        run: |
+          python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/system-flow-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          curl --fail --silent --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8766/demo/ >/dev/null
+          google-chrome --headless --no-sandbox --disable-gpu --no-first-run --user-data-dir=/tmp/system-flow-ci --virtual-time-budget=5000 --dump-dom 'http://127.0.0.1:8766/demo/?test' > /tmp/system-flow-result.html
+          grep -q 'data-test-result="passed"' /tmp/system-flow-result.html || { cat /tmp/system-flow-result.html; exit 1; }

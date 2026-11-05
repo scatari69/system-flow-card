@@ -1,7 +1,7 @@
 {
   "name": "system-flow-card",
-  "version": "0.1.0",
-  "description": "A system flow card for Home Assistant",
+  "version": "1.0.0",
+  "description": "Modern Home Assistant system flow card with a visual editor and adaptive animated layout",
   "keywords": [
     "home-assistant",
     "homeassistant",
@@ -12,19 +12,19 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flyrmyr/system-flow-card.git"
+    "url": "git+https://github.com/scatari69/system-flow-card.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/flyrmyr/system-flow-card/issues"
+    "url": "https://github.com/scatari69/system-flow-card/issues"
   },
-  "homepage": "https://github.com/flyrmyr/system-flow-card#readme",
+  "homepage": "https://github.com/scatari69/system-flow-card#readme",
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint src/*",
-    "release": "semantic-release",
-    "start": "rollup -wc"
+    "start": "rollup -wc",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "custom-card-helpers": "^1.9.0",

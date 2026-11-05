@@ -1,24 +1,62 @@
 # System Flow Card
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/flyrmyr/system-flow-card?style=flat-square)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/flyrmyr/system-flow-card/CI?style=flat-square)
-![GitHub all releases](https://img.shields.io/github/downloads/flyrmyr/system-flow-card/total?style=flat-square)
+## Modern redesign
 
-This card for [Home Assistant](https://home-assistant.io/) Dashboards is designed to provide system distribution in an identical style to the Official Energy Distribution card included by Home Assistant.
+This fork keeps the existing `custom:system-flow-card` YAML format and adds themed sensor tiles, entity labels, a highlighted central node, glowing directional flow particles, smooth fill and idle transitions, and a compact layout for narrow cards. It follows Home Assistant theme colors and the browser's reduced-motion preference. Flow animation durations are bounded to keep very small and large sensor values readable.
 
-<img width="454" alt="Screenshot 2023-02-17 at 1 46 52 AM" src="https://user-images.githubusercontent.com/14035884/219596902-40d68252-fa60-49ef-a354-f14d8a89b1a3.png">
+The installable file is **`dist/system-flow-card.js`**. Install this fork through a HACS custom repository as described below, or back up and replace your existing resource manually, then refresh the dashboard cache. Existing entity IDs and configuration can stay as they are.
+
+The layout only allocates rows for configured sensors: removing the top or bottom sensors reduces card height immediately. Connector positions follow the remaining nodes, including multiple side sensors. Open `demo/?compact` for an example without solar panels. Browser checks cover compact layouts and connector endpoints at 320px and 600px widths.
+
+### Visual editor
+
+In Home Assistant, edit the dashboard, open the card menu, and choose **Edit**. The visual editor supports title, animation timing, idle fading, the central system node (including sensor override), sensor selection, separate production/consumption entities, position, icon, color picker, unit, fill level, inversion, exclusion, and extra readings. Add or remove sensors using the editor buttons, then use Home Assistant's **Save** button. Existing YAML and unknown configuration keys are preserved. Top and bottom rows remain limited to two sensors, and the last sensor cannot be removed.
+
+The bundled editor uses Home Assistant's native `ha-form` controls and entity/icon pickers through its [custom card editor API](https://contributors.home-assistant.io/frontend/custom-ui/card-editor/). No additional resource is needed: replace `dist/system-flow-card.js` and refresh the browser cache.
+
+The demo's **Customize card** button opens the same editor with lightweight stand-ins for Home Assistant controls. Changes immediately update the preview and reset on reload; the demo does not save your actual dashboard.
+
+### Publishing updates
+
+Update the version in `package.json` and `package-lock.json`, run the checks, rebuild and commit `dist/system-flow-card.js`, and push to `main`. After CI passes, run **Actions → Release → Run workflow** with the matching tag (for example `v1.0.1`). The workflow attaches the compiled JavaScript to the GitHub release for HACS.
+
+### Preview and verify
+
+From the project directory, run `python3 -m http.server 8765 --bind 127.0.0.1` and open **http://127.0.0.1:8765/demo/**. The demo runs the real compiled card with simulated Home Assistant entities. Its buttons switch between production, discharge and idle scenarios and between light and dark themes. Add `?test` to run browser assertions; success sets `data-test-result="passed"` on the page body. `?light` opens the light theme directly.
+
+Build with `npm ci --legacy-peer-deps` followed by `npm run build`. Type-check with `node node_modules/typescript/bin/tsc --noEmit` and lint with `npm run lint`.
+
+CSS container queries and `color-mix()` require a modern browser. Actual Home Assistant integration must still be checked against your dashboard and sensor configuration.
+
+
+## Origin
+
+This is a redesigned fork of [samuelolteanu/system-flow-card](https://github.com/samuelolteanu/system-flow-card), based on [flyrmyr/system-flow-card](https://github.com/flyrmyr/system-flow-card). Original configuration options and credits are retained below.
+
+![Compact layout without solar panels](demo/compact.png)
 
 ## Install
 
 ### HACS (recommended)
 
-This card is available in [HACS](https://hacs.xyz/) (Home Assistant Community Store).
-<small>_HACS is a third party community store and is not included in Home Assistant out of the box._</small>
+1. If the original System Flow Card is installed, save a copy of your card YAML and remove the original package from HACS. Keep the dashboard cards themselves.
+2. Open **HACS → ⋮ → Custom repositories**.
+3. Add `https://github.com/scatari69/system-flow-card` with category **Dashboard** (called **Lovelace** in some older HACS versions).
+4. Find **System Flow Card — Modern**, download the latest release, and reload the browser.
+5. In **Settings → Dashboards → ⋮ → Resources**, keep one JavaScript Module entry for `/hacsfiles/system-flow-card/system-flow-card.js`. Remove duplicate or old manual resource URLs. If the old appearance is cached, append `?v=1.0.0` to this URL and hard-refresh.
+6. Edit an existing `custom:system-flow-card` to open the visual editor, or add **System Flow Card — Modern** from the card picker.
+
+The custom element name stays `system-flow-card`, so existing YAML does not need renaming. Load only this fork's JavaScript: loading the original and this fork together causes a duplicate custom-element registration.
+
+[Add this repository to HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=scatari69&repository=system-flow-card&category=plugin)
+
+### Установка через HACS
+
+В HACS откройте **⋮ → Пользовательские репозитории**, добавьте `https://github.com/scatari69/system-flow-card` с категорией **Панель управления / Dashboard** и установите **System Flow Card — Modern**. Если оригинальная версия уже установлена, сначала сохраните YAML и удалите её пакет через HACS; сами карточки на панели оставьте. После установки проверьте, что ресурс `/hacsfiles/system-flow-card/system-flow-card.js` подключён только один раз, и обновите страницу без кеша. Тип `custom:system-flow-card` остаётся прежним.
 
 ### Manual install
 
-1. Download and copy `system-flow-card.js` from the [latest release](https://github.com/flyrmyr/system-flow-card/releases/latest) into your `config/www` directory.
+1. Download and copy `system-flow-card.js` from the [latest release](https://github.com/scatari69/system-flow-card/releases/latest) into your `config/www` directory.
 
 2. Add the resource reference as decribed below.
 

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Flow · Live preview</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090e16;color:#e9eef7;font:14px system-ui,sans-serif;--primary-text-color:#e9eef7;--secondary-text-color:#8b9bb1;--primary-color:#65c8ff;--ha-card-background:#111a27;--divider-color:#ffffff12;transition:background .3s,color .3s}body.light{background:#edf2f7;color:#172338;--primary-text-color:#172338;--secondary-text-color:#64748b;--ha-card-background:#fff;--divider-color:#dfe7ef}main{max-width:640px;margin:60px auto;padding:0 20px}.eyebrow{color:#65c8ff;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:20px 0 30px}h1{font-size:32px;font-weight:600;letter-spacing:-.055em;margin:6px 0}p{color:var(--secondary-text-color);line-height:1.7;margin:8px 0}button{color:inherit;background:transparent;border:1px solid var(--divider-color);padding:10px 15px;border-radius:12px;cursor:pointer;font:inherit}button:hover{background:#65c8ff12}button:focus-visible{outline:2px solid #65c8ff;outline-offset:3px}nav{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}button[aria-pressed=true]{background:#65c8ff18;border-color:#65c8ff66;color:var(--primary-text-color)}footer{display:flex;justify-content:space-between;gap:12px;margin-top:24px;font-size:11px;color:var(--secondary-text-color)}.dot{display:inline-block;width:6px;height:6px;background:#65dfaf;border-radius:50%;margin-right:7px}ha-card{display:block}system-flow-card{width:100%}@media(max-width:400px){main{padding:0 12px;margin:28px auto}h1{font-size:27px}}
+</style>
+<main>
+<div class="eyebrow">Home energy / Live overview</div>
+<header><div><h1>Everything, in flow.</h1><p>Your energy. One connected view.</p></div><button id="theme" aria-label="Toggle light theme">Light mode</button></header>
+<system-flow-card></system-flow-card>
+<div style="margin-top:16px"><button id="settings" aria-expanded="false" aria-controls="editor-panel">Customize card</button></div>
+<aside id="editor-panel" hidden style="margin-top:20px;padding:20px;border:1px solid var(--divider-color);border-radius:20px;background:var(--ha-card-background)"><h2 style="margin-top:0">Card settings</h2><p>Live preview · Demo changes reset on reload. In Home Assistant, use Save.</p></aside>
+<nav aria-label="Demo scenarios"><button data-scene="solar" aria-pressed="true">Sunny afternoon</button><button data-scene="night" aria-pressed="false">After dark</button><button data-scene="idle" aria-pressed="false">Standby</button></nav>
+<footer><span><i class="dot"></i>Simulated sensor data</span><span>System Flow · Redesign</span></footer>
+</main>
+<script type="module">
+// Minimal HA elements let the real card run outside Home Assistant.
+const icons={arrow:'M5 12h14m-5-5 5 5-5 5',solar:'M12 2v2m-7 1 1.5 1.5M2 12h2m16 0h2m-3-7-1.5 1.5M8 10a4 4 0 0 1 8 0M4 14h16l2 8H2Zm1 4h14m-7-4v8',grid:'m5 22 7-20 7 20M8 12h8M6 18h12M8 6h8M5 9h14',battery:'M9 3V1h6v2M6 3h12v19H6Zm4 5h4l-3 4h4l-5 6 1-5H8Z',home:'m2 11 10-9 10 9M5 9v13h14V9M10 22v-8h4v8'};
+customElements.define('ha-card',class extends HTMLElement{});
+customElements.define('ha-icon',class extends HTMLElement{constructor(){super();this.attachShadow({mode:'open'})}static get observedAttributes(){return ['icon']}attributeChangedCallback(){this.style.display='inline-flex';this.style.width='var(--mdc-icon-size,24px)';this.style.height='var(--mdc-icon-size,24px)';this.style.flexShrink='0';const name=this.getAttribute('icon')||'';const key=name.includes('arrow')?'arrow':name.includes('solar')?'solar':name.includes('battery')?'battery':name.includes('house')?'home':'grid';this.shadowRoot.innerHTML=`<svg viewBox="0 0 24 24" width="100%" height="100%" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="${icons[key]}"/></svg>`}});
+await import('./ha-form.js');
+await import('../dist/system-flow-card.js');
+const card=document.querySelector('system-flow-card');
+const entity=(state,name,unit='W')=>({state:String(state),attributes:{friendly_name:name,unit_of_measurement:unit}});
+const states={'sensor.solar':entity(2400,'Solar panels'),'sensor.grid':entity(0,'Grid'),'sensor.home':entity(860,'Home'),'sensor.battery':entity(1540,'Battery'),'sensor.soc':entity(74,'Charge','%')};
+let config={type:'custom:system-flow-card',speed:3,fadeIdylElements:true,system:{icon:'mdi:house',unit:'W',color:'#65c8ff',extra:'sensor.soc'},elements:[{value:'sensor.solar',position:'top',icon:'mdi:solar-power',color:'#f5be62'},{value:'sensor.grid',position:'left',icon:'mdi:transmission-tower',color:'#a79afa'},{value:'sensor.home',position:'right',icon:'mdi:house',invert:true,color:'#65c8ff'},{value:'sensor.battery',position:'bottom',icon:'mdi:battery',invert:true,color:'#65dfaf',fill:'sensor.soc',extra:'sensor.soc'}]};
+if(new URLSearchParams(location.search).has('compact'))config={...config,elements:config.elements.filter(element=>element.position!=='top')};
+card.setConfig(config);
+function scene(name){const values=name==='solar'?[2400,0,860,1540]:name==='night'?[0,420,860,-440]:[0,0,0,0];['solar','grid','home','battery'].forEach((key,index)=>states['sensor.'+key].state=String(values[index]));card.hass={states:{...states}};document.querySelectorAll('[data-scene]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scene===name)))}
+const editor=card.constructor.getConfigElement();
+editor.hass={states};editor.setConfig(config);document.querySelector('#editor-panel').append(editor);
+editor.addEventListener('config-changed',event=>{config=event.detail.config;card.setConfig(config)});
+document.querySelector('#settings').onclick=()=>{const panel=document.querySelector('#editor-panel');panel.hidden=!panel.hidden;document.querySelector('#settings').setAttribute('aria-expanded',String(!panel.hidden))};
+scene(new URLSearchParams(location.search).get('scene')||'solar');
+if(new URLSearchParams(location.search).has('light')){document.body.classList.add('light');document.querySelector('#theme').textContent='Dark mode'}
+document.querySelectorAll('[data-scene]').forEach(button=>button.onclick=()=>scene(button.dataset.scene));
+document.querySelector('#theme').onclick=()=>{const light=document.body.classList.toggle('light');document.querySelector('#theme').textContent=light?'Dark mode':'Light mode'};
+if(new URLSearchParams(location.search).has('editor'))document.querySelector('#settings').click();
+if(new URLSearchParams(location.search).has('test')){
+  try{
+    const check=(condition,message)=>{if(!condition)throw Error(message)};
+    await card.updateComplete;
+    check(card.shadowRoot.querySelectorAll('.circle').length===5,'all sensor nodes render');
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)check(getComputedStyle(card.shadowRoot.querySelector('.flow-particle')).display==='none','reduced motion hides animated particles');
+    check(card.shadowRoot.querySelectorAll('animateMotion').length===9,'three particles per active flow');
+    check(card.shadowRoot.querySelector('.container-middle .value-row span').textContent.includes('0 W'),'zero system balance remains visible');
+    check([...card.shadowRoot.querySelectorAll('animateMotion')].every(el=>el.getAttribute('dur').endsWith('s')),'animation durations have seconds');
+    scene('idle');await card.updateComplete;
+    check(card.shadowRoot.querySelectorAll('animateMotion').length===0,'idle flows stop');
+    scene('night');await card.updateComplete;
+    check(card.shadowRoot.querySelector('#flow-bottom-0 animateMotion').getAttribute('keyPoints')==='1;0','battery discharge reverses flow');
+    states['sensor.soc'].state='150';card.hass={states:{...states}};await card.updateComplete;
+    check(card.shadowRoot.querySelector('.fill-level').style.height==='100%','fill stays within bounds');
+    card.setConfig({...config,speed:-2});await card.updateComplete;
+    check([...card.shadowRoot.querySelectorAll('animateMotion')].every(el=>parseFloat(el.getAttribute('dur'))>0),'invalid speed cannot produce negative durations');
+    states['sensor.soc'].state='74';card.setConfig(config);scene('solar');await card.updateComplete;
+    await import('./editor-test.js').then(module=>module.testEditor(card,config,{states}));
+    await import('./layout-test.js').then(module=>module.testLayout(card,config));
+    const panel=card.shadowRoot.querySelector('ha-card');check(getComputedStyle(panel).display==='block','panel has a block layout');check(document.documentElement.scrollWidth<=innerWidth,'preview fits viewport');document.body.dataset.testResult='passed';
+  }catch(error){document.body.dataset.testResult='failed';document.body.dataset.testError=error.message;console.error(error)}
+}
+</script>
+</html>
