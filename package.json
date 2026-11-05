@@ -1,6 +1,6 @@
 {
   "name": "system-flow-card",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Modern Home Assistant system flow card with a visual editor and adaptive animated layout",
   "keywords": [
     "home-assistant",
