@@ -118,7 +118,7 @@ export class SystemFlowCard extends LitElement {
     }
 
     // 4. Append Unit
-    if (unit) {
+    if (unit && typeof value === 'number') {
       return `${value} ${unit}`;
     }
     return value;
@@ -145,17 +145,30 @@ export class SystemFlowCard extends LitElement {
     return html`<ha-icon style="fill: ${fill}; display: inline-block;" class="small" icon="mdi:arrow-${direction}"></ha-icon>`;
   }
 
+  private isTextValue = (value: unknown): boolean =>
+    typeof value === 'string' && value.trim() !== '' && !Number.isFinite(Number(value));
+
+  private wrapValue = (value: number | string | undefined) => typeof value === 'string'
+    ? value.split('_').map((part, index) => html`${index ? html`_<wbr>` : null}${part}`)
+    : value;
+
+  private extraValueRow = (entityId?: string) => {
+    const entity = entityId ? this.getEntity(entityId) : undefined;
+    const value = this.getEntityValue(entity, false, true) ?? ' ';
+    return html`<div class="value-row ${this.isTextValue(entity?.state) ? 'status-row' : ''}" title="${value}">${this.wrapValue(value)}</div>`;
+  }
+
   private elementValueArrows = (element: CalculatedElementDef) => html`
-    <div class="value-row">
+    <div class="value-row ${this.isTextValue(element.display) ? 'status-row' : ''}">
       ${element.calculations.systemTotal !== undefined
         ? html`
           ${!['left', 'middle'].includes(element.position) ? this.elementArrows(element.calculations.systemTotal, element.position, this.getElementColor(element)) : null}
-          <span style="white-space: nowrap;">${this.displayValue(
+          <span>${this.wrapValue(this.displayValue(
               (element as any).display !== undefined ? (element as any).display : element.calculations.systemTotal,
               element.position !== 'middle',
               this.getElementUnit(element),
               0
-            )}</span>
+            ))}</span>
           ${element.position === 'left' ? this.elementArrows(element.calculations.systemTotal, element.position, this.getElementColor(element)) : null}
         ` : null
       }
@@ -180,7 +193,7 @@ export class SystemFlowCard extends LitElement {
 
         ${element.position === 'bottom'
           ? this.elementValueArrows(element)
-          : html`<div class="value-row">${element.extra?.main ? this.getEntityValue(element.extra?.main, false, true) : ' '}</div>`
+          : this.extraValueRow(element.extra?.main)
         }
 
 
@@ -192,7 +205,7 @@ export class SystemFlowCard extends LitElement {
 
 
         ${element.position === 'bottom'
-          ? html`<div class="value-row">${element.extra?.main ? this.getEntityValue(element.extra?.main, false, true) : ' '}</div>`
+          ? this.extraValueRow(element.extra?.main)
           : this.elementValueArrows(element)
         }
       </div>
@@ -425,6 +438,11 @@ export class SystemFlowCard extends LitElement {
       .circle:hover { transform: translateY(-3px); border-color: var(--node-color); box-shadow: 0 8px 28px color-mix(in srgb, var(--node-color) 16%, transparent); }
     }
     .value-row { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 1; }
+    .status-row { white-space: normal; overflow-wrap: anywhere; font-size: clamp(8px, 2.2cqi, 12px); line-height: 1.15; flex-shrink: 0; }
+    .status-row span { min-width: 0; }
+    .container-middle .status-row { width: 70%; margin-inline: auto; }
+    .circle:has(.status-row) { padding-block: 12px; }
+    .circle:has(.status-row) .icon-row ha-icon { width: 20px !important; height: 20px !important; --mdc-icon-size: 20px; }
     .value-row:has(span) { font-weight: 650; letter-spacing: -.03em; }
     .icon-row { display: flex; align-items: center; justify-content: center; width: 100%; z-index: 1; }
     .icon-row ha-icon { color: var(--node-color); }
@@ -445,6 +463,8 @@ export class SystemFlowCard extends LitElement {
       .card-content { --node-size: clamp(56px, 20cqi, 72px); --row-gap: 30px; --column-gap: 2px; }
       .card-content { padding: 28px 8px 34px !important; }
       .circle { border-radius: 18px; font-size: 10px; }
+      .circle:has(.status-row) { padding-block: 6px; }
+      .circle:has(.status-row) .icon-row ha-icon { width: 16px !important; height: 16px !important; --mdc-icon-size: 16px; }
       .side-extra { font-size: 8px; }
     }
   `;
