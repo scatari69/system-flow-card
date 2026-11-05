@@ -8,6 +8,8 @@ const entityField = (name: string, label: string, required = false) => ({
   name, label, required, selector: { entity: {} },
 });
 const appearanceSchema = [
+  { name: "name", label: "Custom name (optional)", selector: { text: {} } },
+  { name: "show_name", label: "Show label", selector: { boolean: {} } },
   { name: "icon", label: "Icon", selector: { icon: {} } },
   { name: "color", label: "Color (hex or CSS color)", selector: { text: {} } },
   { name: "unit", label: "Display unit", selector: { text: {} } },
@@ -49,9 +51,13 @@ export class SystemFlowCardEditor extends LitElement {
     this.updateConfig({ ...this._config, elements: this._config.elements.map((element, i) => i === index ? { ...element, ...patch } : element) });
   }
 
-  private form(data: object, schema: object[], changed: (value: any) => void) {
+  private form(data: object, schema: { name: string; [key: string]: unknown }[], changed: (value: any) => void) {
     return html`<ha-form .hass=${this.hass} .data=${data} .schema=${schema} .computeLabel=${this.label}
-      @value-changed=${(event: CustomEvent) => { event.stopPropagation(); changed(event.detail.value); }}></ha-form>`;
+      @value-changed=${(event: CustomEvent) => {
+        event.stopPropagation();
+        const cleared = Object.fromEntries(schema.map(field => [field.name, undefined]));
+        changed({ ...cleared, ...event.detail.value });
+      }}></ha-form>`;
   }
 
   private extras(element: Pick<SystemElementDef, "extra">, changed: (patch: Partial<SystemElementDef>) => void) {
@@ -89,7 +95,7 @@ export class SystemFlowCardEditor extends LitElement {
       </section>
       <details><summary>Central system node</summary>
         ${this.appearance(system, updateSystem)}
-        ${this.form(system, [
+        ${this.form({ ...system, show_name: system.show_name !== false }, [
           ...appearanceSchema,
           { name: "override", label: "Use a sensor instead of the calculated balance", selector: { boolean: {} } },
           ...(system.override ? [entityField("value", "System value sensor", true)] : []),
@@ -100,13 +106,13 @@ export class SystemFlowCardEditor extends LitElement {
       ${config.elements.map((element, index) => {
         const split = typeof element.value !== "string";
         const entityId = split ? (element.value as { toSystem?: string; fromSystem?: string }).toSystem || (element.value as { fromSystem?: string }).fromSystem : element.value as string;
-        const name = this.hass.states[entityId || ""]?.attributes.friendly_name || entityId || "New sensor";
+        const name = element.name?.trim() || this.hass.states[entityId || ""]?.attributes.friendly_name || entityId || "New sensor";
         const change = (patch: Partial<ElementDef>) => this.updateElement(index, patch);
         return html`<details class="sensor"><summary>${index + 1}. ${name}</summary>
           <label class="split"><input type="checkbox" .checked=${split} @change=${(event: Event) => change({ value: (event.target as HTMLInputElement).checked ? { toSystem: element.value as string } : entityId || "" })}>Separate production and consumption sensors</label>
           ${split ? this.form(element.value as object, [entityField("toSystem", "Production sensor"), entityField("fromSystem", "Consumption sensor")], value => change({ value: { ...element.value as object, ...value } })) : this.form({ value: element.value }, [entityField("value", "Power sensor", true)], change)}
           ${this.appearance(element, change)}
-          ${this.form(element, [
+          ${this.form({ ...element, show_name: element.show_name !== false }, [
             { name: "position", label: "Position", required: true, selector: { select: { options: ["top", "left", "bottom", "right"] } } },
             ...appearanceSchema,
             entityField("fill", "Fill level sensor (0–100%)"),

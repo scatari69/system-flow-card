@@ -1,4 +1,6 @@
 export type SystemElementDef = {
+  name?: string;
+  show_name?: boolean;
   invert?: boolean;
   override?: boolean;
   value?: string;

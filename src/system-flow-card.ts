@@ -175,12 +175,15 @@ export class SystemFlowCard extends LitElement {
     </div>
   `
 
+  private getElementName = (element: CalculatedElementDef): string => element.name?.trim()
+    || (element.position === 'middle' ? 'System' : this.getElementEntity(element)?.attributes.friendly_name || this.getElementEntityId(element) || 'Sensor');
+
   private elementToHtml = (element: CalculatedElementDef, preventFade: boolean = false) => html`
     <div class="circle-container container-${element.position}" style="
       --node-color: ${this.getElementColor(element)};
       opacity: ${!element.calculations.systemTotal && !preventFade && this._config?.fadeIdylElements ? .4 : 1};
     ">
-      <div class="circle">
+      <div class="circle" role="group" aria-label="${this.getElementName(element)}">
         ${element.fill ? (
           html`<div class="fill-level" style="
             height: ${Math.min(100, Math.max(0, coerceNumber(this.getEntityValue(element.fill, false, false))))}%;
@@ -209,7 +212,7 @@ export class SystemFlowCard extends LitElement {
           : this.elementValueArrows(element)
         }
       </div>
-      <span class="node-label">${element.position === 'middle' ? 'System' : this.getElementEntity(element)?.attributes.friendly_name || this.getElementEntityId(element)}</span>
+      ${element.show_name !== false ? html`<span class="node-label" title="${this.getElementName(element)}">${this.getElementName(element)}</span>` : null}
     </div>
   `
 
@@ -255,6 +258,8 @@ export class SystemFlowCard extends LitElement {
 
     elements.push({
       value: 'system',
+      name: this._config.system?.name,
+      show_name: this._config.system?.show_name,
       display: systemDisplayOverride, // Now valid because we updated type.ts
       ...(this._config.system?.unit ? { unit: this._config.system.unit } : null),
       icon: this._config.system?.icon || 'mdi:house',

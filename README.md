@@ -16,6 +16,12 @@ The bundled editor uses Home Assistant's native `ha-form` controls and entity/ic
 
 The demo normally shows only the sensor card, without surrounding headings, buttons or controls. Open `demo/?editor` to enter its separate editing mode with the same editor and lightweight stand-ins for Home Assistant controls. Changes immediately update the preview and reset on reload; the demo does not save your actual dashboard. In Home Assistant, settings are available through the dashboard's card editing mode.
 
+### Node labels
+
+Each sensor and the central system node has **Custom name (optional)** and **Show label** controls in the visual editor. Leave the custom name empty to use the entity's friendly name (or `System` for the center), or turn off **Show label** to remove the caption. A custom name does not rename the actual Home Assistant entity. Hidden captions retain an accessible node name.
+
+The corresponding YAML options are `name: Battery` and `show_name: false`, placed inside a sensor element or `system`. Labels are shown by default for compatibility with existing configurations.
+
 ### Publishing updates
 
 Update the version in `package.json` and `package-lock.json`, run the checks, rebuild and commit `dist/system-flow-card.js`, and push to `main`. After CI passes, run **Actions → Release → Run workflow** with the matching tag (for example `v1.0.1`). The workflow attaches the compiled JavaScript to the GitHub release for HACS.

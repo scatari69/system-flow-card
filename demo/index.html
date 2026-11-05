@@ -56,6 +56,7 @@ if(params.has('test')){
     await import('./editor-test.js').then(module=>module.testEditor(card,config,{states}));
     await import('./layout-test.js').then(module=>module.testLayout(card,config));
     await import('./status-test.js').then(module=>module.testStatus(card,config,{states}));
+    await import('./labels-test.js').then(module=>module.testLabels(card,config));
     const panel=card.shadowRoot.querySelector('ha-card');check(getComputedStyle(panel).display==='block','panel has a block layout');check(document.documentElement.scrollWidth<=innerWidth,'preview fits viewport');document.body.dataset.testResult='passed';
   }catch(error){document.body.dataset.testResult='failed';document.body.dataset.testError=error.message;console.error(error)}
 }

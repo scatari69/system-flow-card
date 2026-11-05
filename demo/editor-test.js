@@ -18,6 +18,16 @@ export async function testEditor(card, original, hass) {
   check(latest.speed===2.5,'form controls update numeric settings');
   await change(sensorForms()[0],{value:'sensor.grid'});
   check(latest.elements[0].value==='sensor.grid','entity picker updates power sensor');
+  check(sensorForms()[1].data.show_name===true,'labels default to visible in editor');
+  let name=sensorForms()[1].shadowRoot.querySelector('[name=name]');name.value='Solar';name.dispatchEvent(new Event('change'));await editor.updateComplete;
+  check(latest.elements[0].name==='Solar','custom sensor name is saved');
+  const show=sensorForms()[1].shadowRoot.querySelector('[name=show_name]');show.checked=false;show.dispatchEvent(new Event('change'));await editor.updateComplete;
+  check(latest.elements[0].show_name===false&&latest.elements[0].name==='Solar','hiding label preserves custom name');
+  name=sensorForms()[1].shadowRoot.querySelector('[name=name]');name.value='';name.dispatchEvent(new Event('change'));await editor.updateComplete;
+  check(!latest.elements[0].name,'clearing custom name restores default');
+  const systemForm=editor.shadowRoot.querySelector('details > ha-form');
+  await change(systemForm,{...systemForm.data,name:'Inverter',show_name:false});
+  check(latest.system.name==='Inverter'&&latest.system.show_name===false&&latest.system.value==='sensor.grid','system label settings preserve sensor override');
   const color=editor.shadowRoot.querySelector('.sensor input[type=color]');color.value='#123456';color.dispatchEvent(new Event('input'));await editor.updateComplete;
   check(latest.elements[0].color==='#123456','color picker updates node');
   const split=editor.shadowRoot.querySelector('.sensor input[type=checkbox]');split.checked=true;split.dispatchEvent(new Event('change'));await editor.updateComplete;
