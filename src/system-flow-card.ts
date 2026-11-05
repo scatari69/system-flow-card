@@ -155,7 +155,8 @@ export class SystemFlowCard extends LitElement {
   private extraValueRow = (entityId?: string) => {
     const entity = entityId ? this.getEntity(entityId) : undefined;
     const value = this.getEntityValue(entity, false, true) ?? ' ';
-    return html`<div class="value-row ${this.isTextValue(entity?.state) ? 'status-row' : ''}" title="${value}">${this.wrapValue(value)}</div>`;
+    const isText = this.isTextValue(entity?.state);
+    return html`<div class="value-row ${isText ? 'status-row' : ''}" title="${value}">${isText ? html`<span>${this.wrapValue(value)}</span>` : value}</div>`;
   }
 
   private elementValueArrows = (element: CalculatedElementDef) => html`
@@ -444,7 +445,7 @@ export class SystemFlowCard extends LitElement {
     }
     .value-row { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 1; }
     .status-row { white-space: normal; overflow-wrap: anywhere; font-size: clamp(8px, 2.2cqi, 12px); line-height: 1.15; flex-shrink: 0; }
-    .status-row span { min-width: 0; }
+    .status-row span { min-width: 0; font-weight: 400; letter-spacing: normal; }
     .container-middle .status-row { width: 70%; margin-inline: auto; }
     .circle:has(.status-row) { padding-block: 12px; }
     .circle:has(.status-row) .icon-row ha-icon { width: 20px !important; height: 20px !important; --mdc-icon-size: 20px; }
@@ -468,8 +469,9 @@ export class SystemFlowCard extends LitElement {
       .card-content { --node-size: clamp(56px, 20cqi, 72px); --row-gap: 30px; --column-gap: 2px; }
       .card-content { padding: 28px 8px 34px !important; }
       .circle { border-radius: 18px; font-size: 10px; }
-      .circle:has(.status-row) { padding-block: 6px; }
-      .circle:has(.status-row) .icon-row ha-icon { width: 16px !important; height: 16px !important; --mdc-icon-size: 16px; }
+      .circle:has(.status-row) { padding-block: 7px; }
+      .container-middle .status-row { width: 80%; }
+      .circle:has(.status-row) .icon-row ha-icon { width: 14px !important; height: 14px !important; --mdc-icon-size: 14px; }
       .side-extra { font-size: 8px; }
     }
   `;

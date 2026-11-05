@@ -20,7 +20,7 @@ const entity=(state,name,unit='W')=>({state:String(state),attributes:{friendly_n
 const states={'sensor.solar':entity(2400,'Solar panels'),'sensor.grid':entity(0,'Grid'),'sensor.home':entity(860,'Home'),'sensor.battery':entity(1540,'Battery'),'sensor.soc':entity(74,'Charge','%')};
 let config={type:'custom:system-flow-card',speed:3,fadeIdylElements:true,system:{icon:'mdi:house',unit:'W',color:'#65c8ff',extra:'sensor.soc'},elements:[{value:'sensor.solar',position:'top',icon:'mdi:solar-power',color:'#f5be62'},{value:'sensor.grid',position:'left',icon:'mdi:transmission-tower',color:'#a79afa'},{value:'sensor.home',position:'right',icon:'mdi:house',invert:true,color:'#65c8ff'},{value:'sensor.battery',position:'bottom',icon:'mdi:battery',invert:true,color:'#65dfaf',fill:'sensor.soc',extra:'sensor.soc'}]};
 if(params.has('compact'))config={...config,elements:config.elements.filter(element=>element.position!=='top')};
-if(params.has('status')){states['sensor.status']=entity('scheduled_recharge','System status','');config={...config,system:{...config.system,extra:'sensor.status'}};}
+if(params.has('status')){states['sensor.status']=entity('scheduled_recharging','System status','');config={...config,system:{...config.system,extra:'sensor.status'}};}
 card.setConfig(config);
 function scene(name){const values=name==='solar'?[2400,0,860,1540]:name==='night'?[0,420,860,-440]:[0,0,0,0];['solar','grid','home','battery'].forEach((key,index)=>states['sensor.'+key].state=String(values[index]));card.hass={states:{...states}}}
 if(params.has('editor')){
